@@ -1,0 +1,59 @@
+<div class="p-5 max-w-xs w-full rounded-md glass-bg text-center z-10 relative border border-opacity-10 my-5"
+    (click)="$event.stopPropagation()">
+
+
+    <ng-container *ngIf="loading |async let loadingState">
+
+        <ng-container *ngIf="loadingState===1">
+            <div
+                class="bg-white w-16 h-16 flex items-center justify-center text-3xl text-blue-500 rounded-full mx-auto">
+                <i class="material-icons block">send</i>
+            </div>
+
+            <h4 class="text-2xl mt-3 font-medium">Send Ethereum</h4>
+            <p class="text-gray-500 mb-5">Enter amount and recipient address</p>
+
+            <!--Form Alert-->
+            <div class="flex items-center p-4 rounded-lg bg-gray-700 mb-3" role="alert" id="alert-5"
+                *ngIf="error | async; let errorMsg">
+                <i class="material-icons">priority_high</i>
+                <div class="ml-3 text-sm font-medium text-gray-300">
+                    {{errorMsg}}
+                </div>
+                <button type="button" (click)="closeAlert()"
+                    class="ml-auto -mx-1.5 -my-1.5 rounded-lg focus:ring-2 focus:ring-gray-400 p-1.5 inline-flex items-center justify-center h-8 w-8 bg-gray-700 text-gray-300 hover:bg-gray-800 hover:text-white"
+                    data-collapse-toggle="alert-5" aria-label="Close">
+                    <span class="sr-only">Dismiss</span>
+                    <i class="material-icons text-xl">close</i>
+                </button>
+            </div>
+
+            <form class="space-y-3" [formGroup]="sendForm" (submit)="submitForm($event)">
+                <input type="text" class="input" placeholder="To address" formControlName="to" />
+                <input type="number" class="input" placeholder="Amount" formControlName="amount" />
+                <textarea class="input" placeholder="Enter message" formControlName="message"></textarea>
+
+                <button class="w-full p-2 bg-blue-500 text-white rounded-md" type="submit">Send</button>
+                <button class="w-full p-2 rounded-md border border-blue-500" type="button"
+                    (click)="closeSendPopup()">Cancel</button>
+            </form>
+        </ng-container>
+
+        <div *ngIf="loadingState===2" class="text-center flex items-center justify-center space-x-2">
+            <div class="text-4xl w-9 h-9">
+                <i class="material-icons animate-spin">sync</i>
+            </div>
+            <p class="text-gray-500 text-sm">Transaction in progress</p>
+        </div>
+
+        <div *ngIf="loadingState===3" class="text-center text-green-500 flex items-center justify-center space-x-2">
+            <div class="text-4xl relative inline-block">
+                <div class="animate-ping absolute h-full w-full rounded-full bg-green-500 opacity-50"></div>
+                <i class="material-icons block">check_circle</i>
+            </div>
+            <p class="text-sm">Transaction successfull</p>
+        </div>
+
+    </ng-container>
+
+</div>

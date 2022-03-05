@@ -1,0 +1,37 @@
+.transaction {
+  @apply flex items-center justify-between;
+  .t-icon {
+    @apply bg-white w-12 h-12 flex items-center justify-center rounded-full text-2xl relative;
+    &:after {
+      display: block;
+    }
+  }
+
+  .t-amount {
+    @apply font-bold;
+  }
+
+  &.send {
+    .t-icon {
+      @apply text-blue-500;
+      &:after {
+        content: "send";
+      }
+    }
+    .t-amount {
+      @apply text-red-500;
+    }
+  }
+
+  &.receive {
+    .t-icon {
+      @apply text-green-500;
+      &:after {
+        content: "account_balance_wallet";
+      }
+    }
+    .t-amount {
+      @apply text-green-500;
+    }
+  }
+}
