@@ -1,7 +1,9 @@
 import { Injectable } from '@angular/core';
 import { contractAddress, contractABI } from 'src/app/utils/constant';
 import { ethers } from 'ethers';
-import { BehaviorSubject, Subject } from 'rxjs';
+import { BehaviorSubject, take } from 'rxjs';
+import { HttpClient } from '@angular/common/http'
+import { environment } from 'src/environments/environment'
 
 declare const ethereum: any
 
@@ -13,18 +15,54 @@ interface TransactionInterface {
   message: string,
 }
 
+interface BalanceInterface {
+  rate: number
+  balance: string
+  convertedRate: string
+  lastUpdatedAt: number
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class TransactionService {
   private _transactions: BehaviorSubject<undefined | any[]> = new BehaviorSubject<undefined | any[]>(undefined)
-  transactions = this._transactions.asObservable()
+  private _balance: BehaviorSubject<BalanceInterface> = new BehaviorSubject<BalanceInterface>({ rate: 0, balance: '--', lastUpdatedAt: Date.now(), convertedRate: '--' })
 
-  private _balance: Subject<string> = new Subject<string>()
+  transactions = this._transactions.asObservable()
   balance = this._balance.asObservable()
 
-  constructor() { }
+  currency = 'INR'
 
+  constructor(private http: HttpClient) {
+  }
+
+  // Balance related functions
+  updateBalance(payload: Partial<BalanceInterface>) {
+    this._balance.next({ ...this._balance.getValue(), ...payload, lastUpdatedAt: Date.now() })
+  }
+
+  async getBalance(address: string) {
+    const provider = new ethers.providers.Web3Provider(ethereum)
+    let hexBalance = await provider.getBalance(address)
+    const balance = ethers.utils.formatEther(hexBalance)
+    this.updateBalance({ balance })
+    this.fetchConverstaionRate(balance)
+  }
+
+  fetchConverstaionRate(balance: string) {
+    this.http.get('https://min-api.cryptocompare.com/data/price', {
+      params: { fsym: 'ETH', tsyms: this.currency, api_key: environment.apiKey }
+    })
+      .pipe(take(1))
+      .subscribe((data: any) => {
+        const parsedBalance = parseFloat(balance)
+        const rate = data[this.currency]
+        this.updateBalance({ rate, convertedRate: (parsedBalance * rate).toFixed(2) })
+      })
+  }
+
+  // Transaction related functions
   private get transactionsState(): TransactionInterface[] {
     return this._transactions.getValue() || []
   }
@@ -33,13 +71,6 @@ export class TransactionService {
     const provider = new ethers.providers.Web3Provider(ethereum)
     const signer = provider.getSigner()
     return new ethers.Contract(contractAddress, contractABI, signer)
-  }
-
-  async getBalance(address: string) {
-    const provider = new ethers.providers.Web3Provider(ethereum)
-    let hexBalance = await provider.getBalance(address)
-    const balance = ethers.utils.formatEther(hexBalance)
-    this._balance.next(balance)
   }
 
   async addToBlockChain(to: string, from: string, amount: string, message: string): Promise<any> {
