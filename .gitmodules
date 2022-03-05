@@ -1,0 +1,3 @@
+[submodule "Contract"]
+	path = Contract
+	url = https://github.com/SubxX/Contract.git
